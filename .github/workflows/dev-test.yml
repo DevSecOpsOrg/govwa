@@ -55,28 +55,28 @@ jobs:
       - name: Install cdxgen
         run: npm install -g @cyclonedx/cdxgen
 
-      - name: Generate SBOM
-        run: |
-          cd $GITHUB_WORKSPACE
-          export FETCH_LICENSE=true
-          cdxgen -t go -o sbom.json
+      # - name: Generate SBOM
+      #   run: |
+      #     cd $GITHUB_WORKSPACE
+      #     export FETCH_LICENSE=true
+      #     cdxgen -t go -o sbom.json
 
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.0
-        with:
-          ci_run_id: ${{ github.run_id }}
-          report_file: sbom.json
-          workflow_id: 5eac3db738ae37a8870bd72e785aa376
-          scan_type: SBOM
-          scanner: cdxgen
-          backend_api_token: ${{ secrets.DEV_BACKEND_API_TOKEN }}
-          backend_url: ${{ secrets.DEV_BACKEND_URL }}
+      # - name: Import results to ScanDog
+      #   uses: scandogio/scandog-import@v1.0
+      #   with:
+      #     ci_run_id: ${{ github.run_id }}
+      #     report_file: sbom.json
+      #     workflow_id: 5eac3db738ae37a8870bd72e785aa376
+      #     scan_type: SBOM
+      #     scanner: cdxgen
+      #     backend_api_token: ${{ secrets.DEV_BACKEND_API_TOKEN }}
+      #     backend_url: ${{ secrets.DEV_BACKEND_URL }}
 
       - name: scan SBOM by OWASP depscan
         run: |
           cd $GITHUB_WORKSPACE
           export FETCH_LICENSE=true
-          depscan -i sbom.json --reports-dir .
+          depscan -i . --reports-dir .
 
       - name: run command
         run: ls -la
@@ -85,7 +85,18 @@ jobs:
         uses: scandogio/scandog-import@v1.0
         with:
           ci_run_id: ${{ github.run_id }}
-          report_file: depscan-bom.json
+          report_file: sbom-universal.json
+          workflow_id: 5eac3db738ae37a8870bd72e785aa376
+          scan_type: SBOM
+          scanner: cdxgen
+          backend_api_token: ${{ secrets.DEV_BACKEND_API_TOKEN }}
+          backend_url: ${{ secrets.DEV_BACKEND_URL }}
+
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.0
+        with:
+          ci_run_id: ${{ github.run_id }}
+          report_file: depscan-universal.json
           workflow_id: 5eac3db738ae37a8870bd72e785aa376
           scan_type: SCA
           scanner: owasp-depscan
