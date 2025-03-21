@@ -8,7 +8,7 @@ on:
   - cron: '0 0 * * 0'
 
 jobs:
-  tests:
+  SAST:
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
@@ -29,5 +29,62 @@ jobs:
           workflow_id: 5eac3db738ae37a8870bd72e785aa376
           scan_type: SAST
           scanner: gosec
+          backend_api_token: ${{ secrets.DEV_BACKEND_API_TOKEN }}
+          backend_url: ${{ secrets.DEV_BACKEND_URL }}
+
+  SCA-and-Licenses-check:
+    runs-on: ubuntu-latest
+    needs: [SAST]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x' 
+
+      - name: Install OWASP-depscan
+        run: |
+          pip install owasp-depscan
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 21
+  
+      - name: Install cdxgen
+        run: npm install -g @cyclonedx/cdxgen
+
+      - name: Generate SBOM
+        run: |
+          cd $GITHUB_WORKSPACE
+          export FETCH_LICENSE=true
+          cdxgen -t go -o sbom.json
+
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.0
+        with:
+          ci_run_id: ${{ github.run_id }}
+          report_file: sbom.json
+          workflow_id: 5eac3db738ae37a8870bd72e785aa376
+          scan_type: SBOM
+          scanner: cdxgen
+          backend_api_token: ${{ secrets.DEV_BACKEND_API_TOKEN }}
+          backend_url: ${{ secrets.DEV_BACKEND_URL }}
+
+      - name: scan SBOM by OWASP depscan
+        run: |
+          cd $GITHUB_WORKSPACE
+          export FETCH_LICENSE=true
+          depscan -i sbom.json --reports-dir .
+
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.0
+        with:
+          ci_run_id: ${{ github.run_id }}
+          report_file: depscan-bom.json
+          workflow_id: 5eac3db738ae37a8870bd72e785aa376
+          scan_type: SCA
+          scanner: owasp-depscan
           backend_api_token: ${{ secrets.DEV_BACKEND_API_TOKEN }}
           backend_url: ${{ secrets.DEV_BACKEND_URL }}
