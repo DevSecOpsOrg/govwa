@@ -78,6 +78,9 @@ jobs:
           export FETCH_LICENSE=true
           depscan -i sbom.json --reports-dir .
 
+      - name: run command
+        run: ls -la
+
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.0
         with:
