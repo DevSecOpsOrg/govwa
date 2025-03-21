@@ -1,0 +1,33 @@
+name: "Security Scan"
+
+# Run workflow each time code is pushed to your repository and on a schedule.
+# The scheduled workflow runs every at 00:00 on Sunday UTC time.
+on:
+  push:
+  schedule:
+  - cron: '0 0 * * 0'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+        
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: '-no-fail -fmt json -out gosec.json ./...'
+          
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.0
+        with:
+	        ci_run_id: ${{ github.run_id }}
+          report_file: gosec.json
+          workflow_id: 5eac3db738ae37a8870bd72e785aa376
+          scan_type: SAST
+          scanner: gosec
+          backend_api_token: ${{ secrets.DEV_BACKEND_API_TOKEN }}
+          backend_url: ${{ secrets.DEV_BACKEND_URL }}
