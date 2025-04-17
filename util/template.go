@@ -32,7 +32,8 @@ func RenderAsJson(w http.ResponseWriter, data ...interface{}) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	html.EscapeString(w.Write(b))
+	html.EscapeString(b := template.HTMLEscapeString(string(b))
+	w.Write([]byte(b)))
 }
 
 func UnSafeRender(w http.ResponseWriter, name string, data ...interface{}) {
