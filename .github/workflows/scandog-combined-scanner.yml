@@ -29,5 +29,5 @@ jobs:
           workflow_id: "2dc21a8397dea6d8f9779cb1307c6a61"
           scan_type: SAST
           scanner: opengrep
-          backend_api_token: ${{ secrets.SCANDOG_BACKEND_API_TOKEN }}
-          backend_url: ${{ secrets.SCANDOG_BACKEND_URL }}
+          backend_api_token: ${{ secrets.DEV_BACKEND_API_TOKEN }}
+          backend_url: ${{ secrets.DEV_BACKEND_URL }}
