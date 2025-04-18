@@ -66,7 +66,8 @@ func (self *Self) DeleteSession(w http.ResponseWriter, r *http.Request) {
 	
 	session.Options = &sessions.Options{
 		MaxAge:   -1,
-		HttpOnly: false, //set to false for xss :) 
+		HttpOnly: false, //set to false for xss :)
+        Secure:   true, // ensure Secure flag is set to secure cookies
 	}
 
 	session.Values["govwa_session"] = false
