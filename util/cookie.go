@@ -29,13 +29,14 @@ func CheckLevel(r *http.Request) bool {
 /* cookie setter getter */
 
 func SetCookie(w http.ResponseWriter, name, value string){
-	cookie := http.Cookie{
+cookie := http.Cookie{
 		//Path : "/",
 		//Domain : "localhost",
 		Name: name, 
 		Value: value,
+		HttpOnly: true,
+		Secure: true,
 	}
-	http.SetCookie(w, &cookie)
 }
 
 func GetCookie(r *http.Request, name string)string{
