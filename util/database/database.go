@@ -21,7 +21,7 @@ func Connect() (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS " + config.Dbname)
+	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS ?", config.Dbname)
 
 	if err != nil {
 		return nil, err
