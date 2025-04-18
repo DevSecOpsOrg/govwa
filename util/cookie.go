@@ -34,7 +34,8 @@ cookie := http.Cookie{
 		//Domain : "localhost",
 		Name: name, 
 		Value: value,
-		HttpOnly: true,
+		Secure: true,
+	}
 		Secure: true,
 	}
 }
