@@ -34,6 +34,7 @@ func SetCookie(w http.ResponseWriter, name, value string){
 		//Domain : "localhost",
 		Name: name, 
 		Value: value,
+		HttpOnly: true,
 	}
 	http.SetCookie(w, &cookie)
 }
