@@ -12,6 +12,8 @@ services:
       - db-mysql
 
   db-mysql:
+      security_opt:
+        - no-new-privileges:true
     image: mysql:5.7
     command: mysqld --sql_mode=""
     container_name: db_mysql
