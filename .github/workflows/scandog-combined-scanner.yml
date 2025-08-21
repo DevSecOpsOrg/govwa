@@ -1,5 +1,5 @@
 # Combined configuration from 2 templates
-# Scanners: opengrep, OWASP Depscan + cdxgen
+# Scanners: Gosec, grype
 # Generated for GITHUB by ScanDog
 name: Combined Security Scanner Pipeline
 on:
@@ -8,61 +8,47 @@ on:
       - master
 
 jobs:
-# Jobs from template: opengrep
-  scandog_opengrep_scan:
+# Jobs from template: Gosec
+  scandog_gosec_scan:
     runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Install Opengrep
-        run: |
-          apt-get update && apt-get install -y curl jq
-          latest_version=$(curl --silent "https://api.github.com/repos/opengrep/opengrep/releases/latest" | jq -r .tag_name)
-          curl -L -o opengrep "https://github.com/opengrep/opengrep/releases/download/${latest_version}/opengrep_manylinux_x86"
-          chmod +x opengrep
-          mv opengrep /usr/local/bin/opengrep
-      - name: Run Opengrep
-        run: opengrep scan --config auto --json-output=opengrep.json .
+      - name: Checkout Source
+        uses: actions/checkout@v3
+      - name: Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: '-no-fail -fmt json -out gosec.json ./...'
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.0
         with:
           ci_run_id: ${{ github.run_id }}
-          report_file: opengrep.json
+          report_file: gosec.json
           workflow_id: "cf7208e81ee28fbf3d4a3fef7093da5a"
           scan_type: SAST
-          scanner: opengrep
+          scanner: Gosec
           backend_api_token: ${{ secrets.SCANDOG_BACKEND_API_TOKEN }}
           backend_url: ${{ secrets.SCANDOG_BACKEND_URL }}
-# Jobs from template: OWASP Depscan + cdxgen
-  scandog_depscan_sca:
+# Jobs from template: grype
+  scandog_grype_sca:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Run Grype
+        uses: anchore/scan-action@v6
         with:
-          python-version: '3.x'
-      - name: Install OWASP-depscan
-        run: |
-          pip install owasp-depscan
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 21
-      - name: Install cdxgen
-        run: npm install -g @cyclonedx/cdxgen
-      - name: scan SBOM by OWASP depscan
-        run: |
-          cd $GITHUB_WORKSPACE
-          export FETCH_LICENSE=true
-          depscan -t go -i . --reports-dir .
+          path: .
+          output-format: json
+          output-file: grype-results.json
+          fail-build: false
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.0
         with:
           ci_run_id: ${{ github.run_id }}
-          report_file: sbom-go.vdr.json
+          report_file: grype-results.json
           workflow_id: "cf7208e81ee28fbf3d4a3fef7093da5a"
           scan_type: SCA
-          scanner: depscan
+          scanner: grype
           backend_api_token: ${{ secrets.SCANDOG_BACKEND_API_TOKEN }}
           backend_url: ${{ secrets.SCANDOG_BACKEND_URL }}
