@@ -1,6 +1,6 @@
 # Combined configuration from 2 templates
-# Scanners: Gosec, OWASP Depscan + cdxgen
-# Generated for github by ScanDog
+# Scanners: opengrep, OWASP Depscan + cdxgen
+# Generated for GITHUB by ScanDog
 name: Combined Security Scanner Pipeline
 on:
   push:
@@ -8,26 +8,29 @@ on:
       - master
 
 jobs:
-# Jobs from template: Gosec
-  scandog_gosec_scan:
+# Jobs from template: opengrep
+  scandog_opengrep_scan:
     runs-on: ubuntu-latest
-    env:
-      GO111MODULE: on
     steps:
-      - name: Checkout Source
-        uses: actions/checkout@v3
-      - name: Gosec Security Scanner
-        uses: securego/gosec@master
-        with:
-          args: '-no-fail -fmt json -out gosec.json ./...'
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Opengrep
+        run: |
+          apt-get update && apt-get install -y curl jq
+          latest_version=$(curl --silent "https://api.github.com/repos/opengrep/opengrep/releases/latest" | jq -r .tag_name)
+          curl -L -o opengrep "https://github.com/opengrep/opengrep/releases/download/${latest_version}/opengrep_manylinux_x86"
+          chmod +x opengrep
+          mv opengrep /usr/local/bin/opengrep
+      - name: Run Opengrep
+        run: opengrep scan --config auto --json-output=opengrep.json .
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.0
         with:
           ci_run_id: ${{ github.run_id }}
-          report_file: gosec.json
-          workflow_id: "f07f7db8e7bddfe2968bfc970c7be4c9"
+          report_file: opengrep.json
+          workflow_id: "cf7208e81ee28fbf3d4a3fef7093da5a"
           scan_type: SAST
-          scanner: Gosec
+          scanner: opengrep
           backend_api_token: ${{ secrets.SCANDOG_BACKEND_API_TOKEN }}
           backend_url: ${{ secrets.SCANDOG_BACKEND_URL }}
 # Jobs from template: OWASP Depscan + cdxgen
@@ -52,13 +55,13 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           export FETCH_LICENSE=true
-          depscan -i . --reports-dir .
+          depscan -t go -i . --reports-dir .
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.0
         with:
           ci_run_id: ${{ github.run_id }}
-          report_file: sbom-universal.vdr.json
-          workflow_id: "f07f7db8e7bddfe2968bfc970c7be4c9"
+          report_file: sbom-go.vdr.json
+          workflow_id: "cf7208e81ee28fbf3d4a3fef7093da5a"
           scan_type: SCA
           scanner: depscan
           backend_api_token: ${{ secrets.SCANDOG_BACKEND_API_TOKEN }}
