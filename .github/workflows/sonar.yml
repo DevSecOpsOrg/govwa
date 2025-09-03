@@ -20,7 +20,7 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     - name: ScanDog SonarQube Sync
-      uses: scandogio/scandog-import@v1.1
+      uses: scandogio/scandog-import@main
       with:
         endpoint_type: 'sync'
         workflow_id: f83299061dcf3e8397b3da5ce4dac8d2
