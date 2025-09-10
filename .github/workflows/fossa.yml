@@ -18,7 +18,6 @@ jobs:
       uses: fossas/fossa-action@main
       with:
         api-key: ${{secrets.FOSSA_TOKEN}}
-        project: 'custom+57218/git@github.com:0c34/govwa.git'
         run-tests: true
         debug: true
         # Add a small delay to ensure analysis completes before tests
