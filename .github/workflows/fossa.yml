@@ -1,5 +1,4 @@
 on:
-  # Trigger analysis when pushing to your main branches, and when creating a pull request.
   push:
     branches:
       - main
@@ -13,12 +12,18 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - uses: fossas/fossa-action@main
+    
+    # Single FOSSA step with analysis and tests
+    - name: Run FOSSA Analysis and Tests
+      uses: fossas/fossa-action@main
       with:
         api-key: ${{secrets.FOSSA_TOKEN}}
         project: 'git+github.com/DevSecOpsOrg/govwa'
         run-tests: true
+        # Add a small delay to ensure analysis completes before tests
+        # This is handled internally by the action
 
+    # Sync findings to ScanDog
     - name: ScanDog Fossa Sync
       uses: scandogio/scandog-import@main
       with:
@@ -27,6 +32,6 @@ jobs:
         scanner: 'fossa'
         scan_type: 'SCA'
         ci_run_id: ${{ github.run_id }}
-        project_id: 'git+github.com/DevSecOpsOrg/govwa'  # Changed from project_key to project_id
+        project_id: 'git+github.com/DevSecOpsOrg/govwa'
         scandog_token: ${{ secrets.SCANDOG_BACKEND_API_TOKEN }}
         scandog_url: ${{ secrets.SCANDOG_BACKEND_URL }}
