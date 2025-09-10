@@ -13,16 +13,31 @@ jobs:
       with:
         fetch-depth: 0
     
-    # Single FOSSA step with analysis and tests
-    - name: Run FOSSA Analysis and Tests
-      uses: fossas/fossa-action@main
-      with:
-        api-key: ${{secrets.FOSSA_TOKEN}}
-        run-tests: true
-        debug: true
-        # Add a small delay to ensure analysis completes before tests
-        # This is handled internally by the action
-
+    # Install FOSSA CLI
+    - name: Install FOSSA CLI
+      run: |
+        curl https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
+        echo "$HOME/.fossa/bin" >> $GITHUB_PATH
+    
+    # Verify FOSSA CLI installation
+    - name: Verify FOSSA CLI
+      run: |
+        fossa --version
+    
+    # Run FOSSA analysis
+    - name: Run FOSSA Analysis
+      run: |
+        fossa analyze --project git+github.com/DevSecOpsOrg/govwa
+      env:
+        FOSSA_API_KEY: ${{ secrets.FOSSA_TOKEN }}
+    
+    # Run FOSSA tests
+    - name: Run FOSSA Tests
+      run: |
+        fossa test --project git+github.com/DevSecOpsOrg/govwa
+      env:
+        FOSSA_API_KEY: ${{ secrets.FOSSA_TOKEN }}
+    
     # Sync findings to ScanDog
     - name: ScanDog Fossa Sync
       uses: scandogio/scandog-import@main
@@ -32,6 +47,6 @@ jobs:
         scanner: 'fossa'
         scan_type: 'SCA'
         ci_run_id: ${{ github.run_id }}
-        project_id: 'custom+57218/git@github.com:0c34/govwa.git'
+        project_id: 'git+github.com/DevSecOpsOrg/govwa'
         scandog_token: ${{ secrets.SCANDOG_BACKEND_API_TOKEN }}
         scandog_url: ${{ secrets.SCANDOG_BACKEND_URL }}
