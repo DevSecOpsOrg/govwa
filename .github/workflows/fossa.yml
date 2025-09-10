@@ -15,7 +15,7 @@ jobs:
         fetch-depth: 0
     - uses: fossas/fossa-action@main
       with:
-        api-key: ${{secrets.FOSSA_API_KEY}}
+        api-key: ${{secrets.FOSSA_TOKEN}}
         run-tests: true
 
     - name: ScanDog Fossa Sync
