@@ -18,7 +18,7 @@ jobs:
       uses: fossas/fossa-action@main
       with:
         api-key: ${{secrets.FOSSA_TOKEN}}
-        project: 'git+github.com/DevSecOpsOrg/govwa'
+        project: 'custom+57218/git@github.com:0c34/govwa.git'
         run-tests: true
         # Add a small delay to ensure analysis completes before tests
         # This is handled internally by the action
@@ -32,6 +32,6 @@ jobs:
         scanner: 'fossa'
         scan_type: 'SCA'
         ci_run_id: ${{ github.run_id }}
-        project_id: 'git+github.com/DevSecOpsOrg/govwa'
+        project_id: 'custom+57218/git@github.com:0c34/govwa.git'
         scandog_token: ${{ secrets.SCANDOG_BACKEND_API_TOKEN }}
         scandog_url: ${{ secrets.SCANDOG_BACKEND_URL }}
