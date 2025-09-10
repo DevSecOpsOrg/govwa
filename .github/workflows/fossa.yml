@@ -63,6 +63,6 @@ jobs:
         scanner: 'fossa'
         scan_type: 'SCA'
         ci_run_id: ${{ github.run_id }}
-        project_id: 'git+github.com/DevSecOpsOrg/govwa'
+        project_id: 'custom+57218/git@github.com:0c34/govwa.git'
         scandog_token: ${{ secrets.SCANDOG_BACKEND_API_TOKEN }}
         scandog_url: ${{ secrets.SCANDOG_BACKEND_URL }}
