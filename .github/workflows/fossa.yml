@@ -13,28 +13,45 @@ jobs:
       with:
         fetch-depth: 0
     
-    # Install FOSSA CLI
-    - name: Install FOSSA CLI
+    # Install FOSSA CLI v3 with better error handling
+    - name: Install FOSSA CLI v3
       run: |
-        curl https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
+        set -e
+        echo "Installing FOSSA CLI v3..."
+        
+        # Create local bin directory
+        mkdir -p $HOME/.local/bin
+        
+        # Download and install FOSSA CLI v3
+        curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install-latest.sh | bash
+        
+        # Add to PATH
         echo "$HOME/.fossa/bin" >> $GITHUB_PATH
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+        echo "FOSSA CLI v3 installed successfully"
     
-    # Verify FOSSA CLI installation
-    - name: Verify FOSSA CLI
+    # Verify installation
+    - name: Verify FOSSA CLI Installation
       run: |
         fossa --version
+        echo "FOSSA CLI is ready to use"
     
     # Run FOSSA analysis
     - name: Run FOSSA Analysis
       run: |
+        echo "Running FOSSA analysis for project: git+github.com/DevSecOpsOrg/govwa"
         fossa analyze --project git+github.com/DevSecOpsOrg/govwa
+        echo "FOSSA analysis completed successfully"
       env:
         FOSSA_API_KEY: ${{ secrets.FOSSA_TOKEN }}
     
     # Run FOSSA tests
     - name: Run FOSSA Tests
       run: |
+        echo "Running FOSSA tests for project: git+github.com/DevSecOpsOrg/govwa"
         fossa test --project git+github.com/DevSecOpsOrg/govwa
+        echo "FOSSA tests completed successfully"
       env:
         FOSSA_API_KEY: ${{ secrets.FOSSA_TOKEN }}
     
