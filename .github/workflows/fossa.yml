@@ -1,0 +1,31 @@
+on:
+  # Trigger analysis when pushing to your main branches, and when creating a pull request.
+  push:
+    branches:
+      - main
+      - master
+
+name: Main Workflow
+jobs:
+  fossa:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: fossas/fossa-action@main
+      with:
+        api-key: ${{secrets.FOSSA_API_KEY}}
+        run-tests: true
+
+    - name: ScanDog Fossa Sync
+      uses: scandogio/scandog-import@main
+      with:
+        endpoint_type: 'sync'
+        workflow_id: f83299061dcf3e8397b3da5ce4dac8d2
+        scanner: 'fossa'
+        scan_type: 'SCA'
+        ci_run_id: ${{ github.run_id }}
+        project_key: 'DevSecOpsOrg_govwa'
+        scandog_token: ${{ secrets.SCANDOG_BACKEND_API_TOKEN }}
+        scandog_url: ${{ secrets.SCANDOG_BACKEND_URL }}
