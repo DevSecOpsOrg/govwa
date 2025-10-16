@@ -63,11 +63,11 @@ jobs:
             uses: scandogio/scandog-import@v1.1
             with:
               endpoint_type: "import"
-              ci_run_id: $
+              ci_run_id: ${{ github.run_id }}
               report_file: trivy-results.json
-              workflow_id: "622b4ff3c93d482c4276a44840331538"
+              workflow_id: 
               scan_type: Container Scanner
               scanner: Trivy
-              scandog_token: $
-              scandog_url: $
+              scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+              scandog_url: ${{ secrets.SCANDOG_URL }}
   
