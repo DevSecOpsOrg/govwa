@@ -1,0 +1,33 @@
+name: ScanDog Security Scanner
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  
+    scandog_sonarcloud_scan:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+  
+        - name: SonarQube Scan
+          uses: sonarsource/sonarcloud-github-action@v5.0.0
+          env:
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            
+        - name: ScanDog SonarQube Sync
+          uses: scandogio/scandog-import@v1.1
+          with:
+            endpoint_type: 'sync'
+            workflow_id: "622b4ff3c93d482c4276a44840331538"
+            scanner: 'SonarQube'
+            scan_type: 'SAST'
+            ci_run_id: ${{ github.run_id }}
+            project_key: DevSecOpsOrg_govwa
+            scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+            scandog_url: ${{ secrets.SCANDOG_URL }}
+  
