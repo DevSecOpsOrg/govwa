@@ -52,6 +52,7 @@ func DeleteCookie(w http.ResponseWriter, cookies []string){
 		Value:    "",
 		Expires: time.Unix(0, 0),
 		HttpOnly: true,
+		Secure:   true,
 	}
 		http.SetCookie(w, cookie)
 	}
