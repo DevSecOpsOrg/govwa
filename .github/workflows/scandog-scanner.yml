@@ -26,12 +26,12 @@ jobs:
   
         - name: Pull latest image
           run: |
-            docker pull europe-west4-docker.pkg.dev/shared-services-20250105/dev-shared-backend/backend:latest
+            docker pull europe-west4-docker.pkg.dev/shared-services-20250105/dev-shared-backend/backend:test
   
         - name: Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@0.28.0
           with:
-            image-ref: europe-west4-docker.pkg.dev/shared-services-20250105/dev-shared-backend/backend:latest
+            image-ref: europe-west4-docker.pkg.dev/shared-services-20250105/dev-shared-backend/backend:test
             format: 'json'
             scanners: 'vuln'
             output: 'trivy-results.json'
