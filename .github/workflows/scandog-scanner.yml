@@ -22,16 +22,16 @@ jobs:
   
         - name: Login to Google Artifact Registry
           run: |
-            gcloud auth configure-docker europe-west4-docker.pkg.dev
+            gcloud auth configure-docker -docker.pkg.dev
   
         - name: Pull latest image
           run: |
-            docker pull europe-west4-docker.pkg.dev/shared-services-20250105/dev-shared-backend/backend:test
+            docker pull -docker.pkg.dev//dev-shared-backend/backend:latest
   
         - name: Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@0.28.0
           with:
-            image-ref: europe-west4-docker.pkg.dev/shared-services-20250105/dev-shared-backend/backend:test
+            image-ref: -docker.pkg.dev//dev-shared-backend/backend:latest
             format: 'json'
             scanners: 'vuln'
             output: 'trivy-results.json'
