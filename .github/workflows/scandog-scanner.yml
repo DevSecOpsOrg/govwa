@@ -14,23 +14,12 @@ jobs:
             uses: actions/checkout@v4
     
           # Container registry authentication (configured via ScanDog settings)
-          - name: Authenticate to Google Cloud
-            uses: google-github-actions/auth@v2
-            with:
-              credentials_json: '${{ secrets.GCP_KEY }}'
     
-          - name: Login to Google Artifact Registry
-            run: |
-              gcloud auth configure-docker europe-west4-docker.pkg.dev
-    
-          - name: Pull latest image
-            run: |
-              docker pull europe-west4-docker.pkg.dev/shared-services-20250105/dev-shared-backend/backend:latest
     
           - name: Trivy vulnerability scanner
             uses: aquasecurity/trivy-action@0.28.0
             with:
-              image-ref: europe-west4-docker.pkg.dev/shared-services-20250105/dev-shared-backend/backend:latest
+              image-ref: mysql:9.3.0
               format: 'json'
               scanners: 'vuln'
               output: 'trivy-results.json'
@@ -48,7 +37,7 @@ jobs:
               endpoint_type: "import"
               ci_run_id: ${{ github.run_id }}
               report_file: trivy-results.json
-              workflow_id: 381355812d8c3eb4fc6e91aa0d2fddea
+              workflow_id: 1246e00fbb1b48cfe6a0c60dc3f25028
               scan_type: Container Scanner
               scanner: Trivy
               scandog_token: ${{ secrets.SCANDOG_TOKEN }}
@@ -71,7 +60,7 @@ jobs:
             uses: scandogio/scandog-import@v1.1
             with:
               endpoint_type: 'sync'
-              workflow_id: "381355812d8c3eb4fc6e91aa0d2fddea"
+              workflow_id: "1246e00fbb1b48cfe6a0c60dc3f25028"
               scanner: 'SonarQube'
               scan_type: 'SAST'
               ci_run_id: ${{ github.run_id }}
