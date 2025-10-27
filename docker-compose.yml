@@ -22,8 +22,8 @@ services:
     environment: 
       - MYSQL_ROOT_HOST=mysql-host
       - MYSQL_USER=govwauser
-      - MYSQL_PASSWORD=govwaP@ss
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=govwa
-      - MYSQL_ROOT_PASSWORD=admin321
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     
   
