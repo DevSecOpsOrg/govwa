@@ -67,4 +67,4 @@ jobs:
               project_key: DevSecOpsOrg_govwa
               scandog_token: ${{ secrets.SCANDOG_TOKEN }}
               scandog_url: ${{ secrets.SCANDOG_URL }}
-  
+# Updated: 2025-10-27 16:02:42
