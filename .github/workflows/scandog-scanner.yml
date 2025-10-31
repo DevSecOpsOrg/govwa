@@ -29,7 +29,7 @@ jobs:
             scanner: 'SonarQube'
             scan_type: 'SAST'
             ci_run_id: ${{ github.run_id }}
-            project_key: DevSecOpsOrg_govwaNo tags
+            project_key: DevSecOpsOrg_govwa
             scandog_token: ${{ secrets.SCANDOG_TOKEN }}
             scandog_url: ${{ secrets.SCANDOG_URL }}
   
