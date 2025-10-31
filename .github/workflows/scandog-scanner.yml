@@ -2,9 +2,9 @@ name: ScanDog Security Scanner
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   
@@ -49,7 +49,7 @@ jobs:
             endpoint_type: "import"
             ci_run_id: ${{ github.run_id }}
             report_file: trivy-results.json
-            workflow_id: 381355812d8c3eb4fc6e91aa0d2fddea
+            workflow_id: 7e0dd1908ccc3eac214541afc17329c6
             scan_type: Container Scanner
             scanner: Trivy
             scandog_token: ${{ secrets.SCANDOG_TOKEN }}
