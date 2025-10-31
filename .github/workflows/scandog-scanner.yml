@@ -8,50 +8,28 @@ on:
 
 jobs:
   
-    scandog_trivy_scan:
+    scandog_sonarcloud_scan:
       runs-on: ubuntu-latest
       steps:
         - name: Checkout code
           uses: actions/checkout@v4
-  
-        # Container registry authentication (configured via ScanDog settings)
-        - name: Authenticate to Google Cloud
-          uses: google-github-actions/auth@v2
           with:
-            credentials_json: '${{ secrets.GCP_KEY }}'
+            fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
   
-        - name: Login to Google Artifact Registry
-          run: |
-            gcloud auth configure-docker europe-west4-docker.pkg.dev
-  
-        - name: Pull latest image
-          run: |
-            docker pull europe-west4-docker.pkg.dev/shared-services-20250105/dev-shared-backend/backend:latest
-  
-        - name: Trivy vulnerability scanner
-          uses: aquasecurity/trivy-action@0.28.0
-          with:
-            image-ref: europe-west4-docker.pkg.dev/shared-services-20250105/dev-shared-backend/backend:latest
-            format: 'json'
-            scanners: 'vuln'
-            output: 'trivy-results.json'
-  
-        - name: Upload Trivy scan results
-          uses: actions/upload-artifact@v4
-          with:
-
-            name: trivy-report
-            path: trivy-results.json
-  
-        - name: Import results to ScanDog
+        - name: SonarQube Scan
+          uses: SonarSource/sonarqube-scan-action@v6
+          env:
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            
+        - name: ScanDog SonarQube Sync
           uses: scandogio/scandog-import@v1.1
           with:
-            endpoint_type: "import"
+            endpoint_type: 'sync'
+            workflow_id: "7e0dd1908ccc3eac214541afc17329c6"
+            scanner: 'SonarQube'
+            scan_type: 'SAST'
             ci_run_id: ${{ github.run_id }}
-            report_file: trivy-results.json
-            workflow_id: 7e0dd1908ccc3eac214541afc17329c6
-            scan_type: Container Scanner
-            scanner: Trivy
+            project_key: DevSecOpsOrg_govwa
             scandog_token: ${{ secrets.SCANDOG_TOKEN }}
             scandog_url: ${{ secrets.SCANDOG_URL }}
   
