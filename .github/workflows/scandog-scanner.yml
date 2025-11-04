@@ -8,28 +8,32 @@ on:
 
 jobs:
   
-    scandog_sonarcloud_scan:
+    scandog_opengrep_scan:
       runs-on: {{ runner }}
       steps:
         - name: Checkout code
           uses: actions/checkout@v4
-          with:
-            fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
   
-        - name: SonarQube Scan
-          uses: SonarSource/sonarqube-scan-action@v6
-          env:
-            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-            
-        - name: ScanDog SonarQube Sync
+        - name: Install Opengrep
+          run: |
+            apt-get update && apt-get install -y curl jq
+            latest_version=$(curl --silent "https://api.github.com/repos/opengrep/opengrep/releases/latest" | jq -r .tag_name)
+            curl -L -o opengrep "https://github.com/opengrep/opengrep/releases/download/${latest_version}/opengrep_manylinux_x86"
+            chmod +x opengrep
+            mv opengrep /usr/local/bin/opengrep
+  
+        - name: Run Opengrep
+          run: opengrep scan --config auto --json-output=opengrep.json .
+  
+        - name: Import results to ScanDog
           uses: scandogio/scandog-import@v1.1
           with:
-            endpoint_type: 'sync'
-            workflow_id: "622b4ff3c93d482c4276a44840331538"
-            scanner: 'SonarQube'
-            scan_type: 'SAST'
+            endpoint_type: "import"
             ci_run_id: ${{ github.run_id }}
-            project_key: DevSecOpsOrg_govwa
+            report_file: opengrep.json
+            workflow_id: "622b4ff3c93d482c4276a44840331538"
+            scan_type: SAST
+            scanner: opengrep
             scandog_token: ${{ secrets.SCANDOG_TOKEN }}
             scandog_url: ${{ vars.SCANDOG_URL }}
   
