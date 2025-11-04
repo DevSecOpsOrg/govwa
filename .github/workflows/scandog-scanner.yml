@@ -9,7 +9,7 @@ on:
 jobs:
   
     scandog_sonarcloud_scan:
-      runs-on: ubuntu-latest
+      runs-on: {{ runner }}
       steps:
         - name: Checkout code
           uses: actions/checkout@v4
@@ -32,4 +32,4 @@ jobs:
             project_key: DevSecOpsOrg_govwa
             scandog_token: ${{ secrets.SCANDOG_TOKEN }}
             scandog_url: ${{ vars.SCANDOG_URL }}
-# Updated: 2025-11-04 19:34:37
+  
