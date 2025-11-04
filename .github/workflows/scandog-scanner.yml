@@ -7,87 +7,16 @@ on:
     branches: [ master ]
 
 jobs:
-  scandog_checkov_iac_scanner:
-  runs-on: ubuntu-latest
+  scandog_security_scans:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Checkov GitHub Action
-        uses: bridgecrewio/checkov-action@v12
-        with:
-          soft_fail: true
-          output_format: json
-          output_file_path: .
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.1
-        with:
-          endpoint_type: "import"
-          ci_run_id: ${{ github.run_id }}
-          report_file: results_json.json
-          workflow_id: 622b4ff3c93d482c4276a44840331538
-          scan_type: IaC Scanner
-          scanner: checkov
-          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-          scandog_url: ${{ vars.SCANDOG_URL }}
 
-  scandog_semgrep_sast:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: semgrep scan
-        run: |
-          semgrep scan --config auto --json > semgrep.json .
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.1
-        with:
-          endpoint_type: "import"
-          ci_run_id: ${{ github.run_id }}
-          report_file: semgrep.json
-          workflow_id: 622b4ff3c93d482c4276a44840331538
-          scan_type: SAST
-          scanner: Semgrep
-          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-          scandog_url: ${{ vars.SCANDOG_URL }}
+      # opengrep (SAST)
 
-  scandog_osv_scanner_sca:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Install osv-scanner
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y snapd
-          sudo snap install osv-scanner
-      - name: Run osv-scanner
-        run: |
-          osv-scanner scan source -r . --format json > osv-results.json
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.1
-        with:
-          endpoint_type: "import"
-          ci_run_id: ${{ github.run_id }}
-          report_file: osv-results.json
-          workflow_id: 622b4ff3c93d482c4276a44840331538
-          scan_type: SCA
-          scanner: osv-scanner
-          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-          scandog_url: ${{ vars.SCANDOG_URL }}
-
-  scandog_opengrep_sast:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Install Opengrep
         run: |
           apt-get update && apt-get install -y curl jq
@@ -98,6 +27,7 @@ jobs:
       - name: Run Opengrep
         run: |
           opengrep scan --config auto --json-output=opengrep.json .
+
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.1
         with:
@@ -110,125 +40,8 @@ jobs:
           scandog_token: ${{ secrets.SCANDOG_TOKEN }}
           scandog_url: ${{ vars.SCANDOG_URL }}
 
-  scandog_owasp_depscan_+_cdxgen_sca:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.x
-      - name: Install OWASP-depscan
-        run: |
-          pip install owasp-depscan
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 21
-      - name: scan SBOM by OWASP depscan
-        run: |
-          cd $GITHUB_WORKSPACE
-          export FETCH_LICENSE=true
-          depscan -t go -i . --reports-dir .
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.1
-        with:
-          endpoint_type: "import"
-          ci_run_id: ${{ github.run_id }}
-          report_file: sbom-go.vdr.json
-          workflow_id: 622b4ff3c93d482c4276a44840331538
-          scan_type: SCA
-          scanner: depscan
-          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-          scandog_url: ${{ vars.SCANDOG_URL }}
+      # Trivy (Container)
 
-  scandog_grype_sca:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Run Grype
-        uses: anchore/scan-action@v6
-        with:
-          path: .
-          output-format: json
-          output-file: grype-results.json
-          fail-build: false
-          fail-on: none
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.1
-        with:
-          endpoint_type: "import"
-          ci_run_id: ${{ github.run_id }}
-          report_file: grype-results.json
-          workflow_id: 622b4ff3c93d482c4276a44840331538
-          scan_type: SCA
-          scanner: grype
-          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-          scandog_url: ${{ vars.SCANDOG_URL }}
-
-  scandog_gosec_sast:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Gosec Security Scanner
-        uses: securego/gosec@master
-        with:
-          args: -no-fail -fmt json -out gosec.json .
-        env:
-          GO111MODULE: on
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.1
-        with:
-          endpoint_type: "import"
-          ci_run_id: ${{ github.run_id }}
-          report_file: gosec.json
-          workflow_id: 622b4ff3c93d482c4276a44840331538
-          scan_type: SAST
-          scanner: Gosec
-          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-          scandog_url: ${{ vars.SCANDOG_URL }}
-
-  scandog_cdxgen_sbom:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Install cdxgen
-        run: |
-          npm install -g @cyclonedx/cdxgen
-      - name: Generate SBOM
-        run: |
-          cdxgen --input . -t go --output sbom.json
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.1
-        with:
-          endpoint_type: "import"
-          ci_run_id: ${{ github.run_id }}
-          report_file: sbom.json
-          workflow_id: 622b4ff3c93d482c4276a44840331538
-          scan_type: SBOM
-          scanner: cdxgen
-          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-          scandog_url: ${{ vars.SCANDOG_URL }}
-
-  scandog_trivy_container_scanner:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Pull latest image
         run: |
           docker pull nginx:latest
@@ -239,6 +52,7 @@ jobs:
           format: json
           scanners: vuln
           output: trivy-results.json
+
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.1
         with:
@@ -248,117 +62,5 @@ jobs:
           workflow_id: 622b4ff3c93d482c4276a44840331538
           scan_type: Container Scanner
           scanner: Trivy
-          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-          scandog_url: ${{ vars.SCANDOG_URL }}
-
-  scandog_tfsec_iac_scanner:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Run tfsec
-        uses: aquasecurity/tfsec-action@v1.0.0
-        with:
-          format: json
-          out: tfsec-results.json
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.1
-        with:
-          endpoint_type: "import"
-          ci_run_id: ${{ github.run_id }}
-          report_file: tfsec-results.json
-          workflow_id: 622b4ff3c93d482c4276a44840331538
-          scan_type: IaC Scanner
-          scanner: tfsec
-          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-          scandog_url: ${{ vars.SCANDOG_URL }}
-
-  scandog_trufflehog_secret_scanning:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Install TruffleHog
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
-      - name: Run TruffleHog
-        run: |
-          trufflehog filesystem --no-verification --no-update --json {{ trufflehog_scan_ref }} > trufflehog.json
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.1
-        with:
-          endpoint_type: "import"
-          ci_run_id: ${{ github.run_id }}
-          report_file: trufflehog.json
-          workflow_id: 622b4ff3c93d482c4276a44840331538
-          scan_type: Secret Scanning
-          scanner: trufflehog
-          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-          scandog_url: ${{ vars.SCANDOG_URL }}
-
-  scandog_gitleaks_secret_scanning:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Install Gitleaks
-        run: |
-          sudo apt-get update && sudo apt-get install -y jq || true
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "x86_64" ]; then
-            ARCH="x64"
-          elif [ "$ARCH" = "aarch64" ]; then
-            ARCH="arm64"
-          fi
-          OS="linux"
-          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/gitleaks/gitleaks/releases/latest" | jq -r .tag_name)
-          VERSION_NUMBER=${LATEST_VERSION#v}
-          DOWNLOAD_URL="https://github.com/gitleaks/gitleaks/releases/download/${LATEST_VERSION}/gitleaks_${VERSION_NUMBER}_${OS}_${ARCH}.tar.gz"
-          curl -L -o gitleaks.tar.gz "${DOWNLOAD_URL}"
-          tar -xzf gitleaks.tar.gz
-          chmod +x gitleaks
-          sudo mv gitleaks /usr/local/bin/gitleaks
-          gitleaks version
-      - name: Run Gitleaks
-        run: |
-          gitleaks detect --source . --verbose --report-path gitleaks.json --report-format json || exit 0
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.1
-        with:
-          endpoint_type: "import"
-          ci_run_id: ${{ github.run_id }}
-          report_file: gitleaks.json
-          workflow_id: 622b4ff3c93d482c4276a44840331538
-          scan_type: Secret Scanning
-          scanner: gitleaks
-          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-          scandog_url: ${{ vars.SCANDOG_URL }}
-
-  scandog_sonarcloud_sast:
-  runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
-        env:
-          SONAR_TOKEN: 96cef27d316d365e68c73cf709121d75d0b16643
-      - name: Import results to ScanDog
-        uses: scandogio/scandog-import@v1.1
-        with:
-          endpoint_type: "import"
-          ci_run_id: ${{ github.run_id }}
-          report_file: 
-          workflow_id: 622b4ff3c93d482c4276a44840331538
-          scan_type: SAST
-          scanner: SonarQube
           scandog_token: ${{ secrets.SCANDOG_TOKEN }}
           scandog_url: ${{ vars.SCANDOG_URL }}
