@@ -3,6 +3,8 @@ name: ScanDog Security Scanner
 on:
   push:
     branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   scandog_security_scans:
