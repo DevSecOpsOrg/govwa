@@ -7,39 +7,54 @@ on:
     branches: [ master ]
 
 jobs:
-  
-    scandog_trivy_container_scan:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-  
-        # Container registry authentication (configured via ScanDog settings)
-  
-        - name: Trivy vulnerability scanner
-          uses: aquasecurity/trivy-action@0.28.0
-          with:
-            image-ref: 
-            format: 'json'
-            scanners: 'vuln'
-            output: 'trivy-results.json'
-  
-        - name: Upload Trivy scan results
-          uses: actions/upload-artifact@v4
-          with:
+  scandog_security_scans:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            name: trivy-report
-            path: trivy-results.json
-  
-        - name: Import results to ScanDog
-          uses: scandogio/scandog-import@v1.1
-          with:
-            endpoint_type: "import"
-            ci_run_id: ${{ github.run_id }}
-            report_file: trivy-results.json
-            workflow_id: 
-            scan_type: Container Scanner
-            scanner: Trivy
-            scandog_token: ${{ secrets.SCANDOG_TOKEN }}
-            scandog_url: ${{ vars.SCANDOG_URL }}
-  
+      # SonarCloud (SAST)
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: 96cef27d316d365e68c73cf709121d75d0b16643
+
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.1
+        with:
+          endpoint_type: "import"
+          ci_run_id: ${{ github.run_id }}
+          report_file: 
+          workflow_id: 622b4ff3c93d482c4276a44840331538
+          scan_type: SAST
+          scanner: SonarQube
+          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+          scandog_url: ${{ vars.SCANDOG_URL }}
+
+      # Trivy (Container)
+
+      - name: Pull latest image
+        run: |
+          docker pull nginx:latest
+      - name: Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: nginx:latest
+          format: json
+          scanners: vuln
+          output: trivy-results.json
+
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.1
+        with:
+          endpoint_type: "import"
+          ci_run_id: ${{ github.run_id }}
+          report_file: trivy-results.json
+          workflow_id: 622b4ff3c93d482c4276a44840331538
+          scan_type: Container Scanner
+          scanner: Trivy
+          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+          scandog_url: ${{ vars.SCANDOG_URL }}
