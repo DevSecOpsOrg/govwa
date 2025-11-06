@@ -1,0 +1,29 @@
+name: ScanDog Security Scanner
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  scandog_sonarcloud_sast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: 7fefe9bb2083f5914dd2b9a753f0f9ee62d1a1b4
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.1
+        with:
+          endpoint_type: "import"
+          ci_run_id: ${{ github.run_id }}
+          report_file: 
+          workflow_id: 7e0dd1908ccc3eac214541afc17329c6
+          scan_type: SAST
+          scanner: SonarQube
+          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+          scandog_url: ${{ vars.SCANDOG_URL }}
