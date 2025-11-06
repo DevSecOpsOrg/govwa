@@ -2,7 +2,9 @@ name: ScanDog Security Scanner
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   scandog_sonarcloud_sast:
