@@ -7,6 +7,35 @@ on:
     branches: [ master ]
 
 jobs:
+  scandog_opengrep_sast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install Opengrep
+        run: |
+          apt-get update && apt-get install -y curl jq
+          latest_version=$(curl --silent "https://api.github.com/repos/opengrep/opengrep/releases/latest" | jq -r .tag_name)
+          curl -L -o opengrep "https://github.com/opengrep/opengrep/releases/download/${latest_version}/opengrep_manylinux_x86"
+          chmod +x opengrep
+          mv opengrep /usr/local/bin/opengrep
+      - name: Run Opengrep
+        run: |
+          opengrep scan --config auto --json-output=opengrep.json .
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.1
+        with:
+          endpoint_type: "import"
+          ci_run_id: ${{ github.run_id }}
+          report_file: opengrep.json
+          workflow_id: 622b4ff3c93d482c4276a44840331538
+          scan_type: SAST
+          scanner: opengrep
+          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+          scandog_url: ${{ vars.SCANDOG_URL }}
+
   scandog_sonarcloud_sast:
     runs-on: ubuntu-latest
     steps:
@@ -21,11 +50,41 @@ jobs:
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.1
         with:
-          endpoint_type: "import"
+          endpoint_type: "sync"
           ci_run_id: ${{ github.run_id }}
           report_file: 
           workflow_id: 622b4ff3c93d482c4276a44840331538
           scan_type: SAST
-          scanner: SonarQube
+          scanner: SonarCloud
+          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+          scandog_url: ${{ vars.SCANDOG_URL }}
+          project_key: DevSecOpsOrg_govwa
+
+  scandog_trivy_container:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Pull latest image
+        run: |
+          docker pull nginx:latest
+      - name: Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: nginx:latest
+          format: json
+          scanners: vuln
+          output: trivy-results.json
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.1
+        with:
+          endpoint_type: "import"
+          ci_run_id: ${{ github.run_id }}
+          report_file: trivy-results.json
+          workflow_id: 622b4ff3c93d482c4276a44840331538
+          scan_type: Container Scanner
+          scanner: Trivy
           scandog_token: ${{ secrets.SCANDOG_TOKEN }}
           scandog_url: ${{ vars.SCANDOG_URL }}
