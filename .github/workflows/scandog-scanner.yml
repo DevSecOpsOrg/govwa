@@ -7,7 +7,31 @@ on:
     branches: [ master ]
 
 jobs:
-  scandog_mend_sca_0:
+  scandog_sonarcloud_sast_0:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.1
+        with:
+          endpoint_type: "sync"
+          ci_run_id: ${{ github.run_id }}
+          report_file: 
+          workflow_id: 622b4ff3c93d482c4276a44840331538
+          scan_type: SAST
+          scanner: SonarCloud
+          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+          scandog_url: ${{ vars.SCANDOG_URL }}
+          project_key: ${{ vars.SONARCLOUD_PROJECT_KEY }}
+
+  scandog_mend_sca_1:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,11 +47,11 @@ jobs:
         env:
           MEND_EMAIL: ${{ secrets.MEND_EMAIL }}
           MEND_USER_KEY: ${{ secrets.MEND_API_KEY }}
-          MEND_ORGANIZATION: ${mend_org_uuid}
-          MEND_URL: https://api-app.mend.io
+          MEND_ORGANIZATION: ${{ vars.MEND_ORG_UUID }}
+          MEND_URL: ${{ vars.MEND_URL }}
         run: |
           mend auth info --non-interactive
-          mend dep -d . -r --format json >> mend-sca-report.json
+          mend dep -d ${{ vars.MEND_PATH }} -r --format json >> mend-sca-report.json
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.1
         with:
@@ -40,7 +64,7 @@ jobs:
           scandog_token: ${{ secrets.SCANDOG_TOKEN }}
           scandog_url: ${{ vars.SCANDOG_URL }}
 
-  scandog_mend_sast_1:
+  scandog_mend_sast_2:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -56,11 +80,11 @@ jobs:
         env:
           MEND_EMAIL: ${{ secrets.MEND_EMAIL }}
           MEND_USER_KEY: ${{ secrets.MEND_API_KEY }}
-          MEND_ORGANIZATION: ${mend_org_uuid}
-          MEND_URL: https://api-app.mend.io
+          MEND_ORGANIZATION: ${{ vars.MEND_ORG_UUID }}
+          MEND_URL: ${{ vars.MEND_URL }}
         run: |
           mend auth info --non-interactive
-          mend sast -d . -r --formats json --filename mend-sast-report
+          mend sast -d ${{ vars.MEND_PATH }} -r --formats json --filename mend-sast-report
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.1
         with:
