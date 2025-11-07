@@ -7,29 +7,38 @@ on:
     branches: [ master ]
 
 jobs:
-  scandog_sonarcloud_sast_0:
+  scandog_mend_sast_0:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
+      - name: Install Mend CLI
+        run: |
+          curl -L -o mend-cli.zip https://downloads.mend.io/cli/linux_amd64/mend
+          chmod +x mend-cli.zip
+          sudo mv mend-cli.zip /usr/local/bin/mend
+      - name: Run Mend SAST Scan
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          MEND_EMAIL: ${{ secrets.MEND_EMAIL }}
+          MEND_USER_KEY: ${{ secrets.MEND_API_KEY }}
+          MEND_ORGANIZATION: ${{ vars.MEND_ORG_UUID }}
+          MEND_URL: ${{ vars.MEND_URL }}
+        run: |
+          mend auth info --non-interactive
+          mend sast -d ${{ vars.MEND_PATH }} -r --formats json --filename mend-sast-report
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.1
         with:
-          endpoint_type: "sync"
+          endpoint_type: "import"
           ci_run_id: ${{ github.run_id }}
-          report_file: 
+          report_file: mend-sast-report.json
           workflow_id: 622b4ff3c93d482c4276a44840331538
           scan_type: SAST
-          scanner: SonarCloud
+          scanner: mend
           scandog_token: ${{ secrets.SCANDOG_TOKEN }}
           scandog_url: ${{ vars.SCANDOG_URL }}
-          project_key: ${{ vars.SONARCLOUD_PROJECT_KEY }}
 
   scandog_mend_sca_1:
     runs-on: ubuntu-latest
@@ -64,35 +73,26 @@ jobs:
           scandog_token: ${{ secrets.SCANDOG_TOKEN }}
           scandog_url: ${{ vars.SCANDOG_URL }}
 
-  scandog_mend_sast_2:
+  scandog_sonarcloud_sast_2:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install Mend CLI
-        run: |
-          curl -L -o mend-cli.zip https://downloads.mend.io/cli/linux_amd64/mend
-          chmod +x mend-cli.zip
-          sudo mv mend-cli.zip /usr/local/bin/mend
-      - name: Run Mend SAST Scan
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
-          MEND_EMAIL: ${{ secrets.MEND_EMAIL }}
-          MEND_USER_KEY: ${{ secrets.MEND_API_KEY }}
-          MEND_ORGANIZATION: ${{ vars.MEND_ORG_UUID }}
-          MEND_URL: ${{ vars.MEND_URL }}
-        run: |
-          mend auth info --non-interactive
-          mend sast -d ${{ vars.MEND_PATH }} -r --formats json --filename mend-sast-report
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       - name: Import results to ScanDog
         uses: scandogio/scandog-import@v1.1
         with:
-          endpoint_type: "import"
+          endpoint_type: "sync"
           ci_run_id: ${{ github.run_id }}
-          report_file: mend-sast-report.json
+          report_file: 
           workflow_id: 622b4ff3c93d482c4276a44840331538
           scan_type: SAST
-          scanner: mend
+          scanner: SonarCloud
           scandog_token: ${{ secrets.SCANDOG_TOKEN }}
           scandog_url: ${{ vars.SCANDOG_URL }}
+          project_key: ${{ vars.SONARCLOUD_PROJECT_KEY }}
