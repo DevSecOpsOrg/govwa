@@ -1,0 +1,88 @@
+name: ScanDog Security Scanner
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  scandog_mend_sast_0:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install Mend CLI
+        run: |
+          curl -L -o mend-cli.zip https://downloads.mend.io/cli/linux_amd64/mend
+          chmod +x mend-cli.zip
+          sudo mv mend-cli.zip /usr/local/bin/mend
+      - name: Run Mend SAST Scan
+        run: |
+          mend auth info --non-interactive
+          mend sast -d . -r --formats json --filename mend-sast-report
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.1
+        with:
+          endpoint_type: "import"
+          ci_run_id: ${{ github.run_id }}
+          report_file: mend-sast-report.json
+          workflow_id: 622b4ff3c93d482c4276a44840331538
+          scan_type: SAST
+          scanner: mend
+          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+          scandog_url: ${{ vars.SCANDOG_URL }}
+
+  scandog_sonarcloud_sast_1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.1
+        with:
+          endpoint_type: "sync"
+          ci_run_id: ${{ github.run_id }}
+          report_file: 
+          workflow_id: 622b4ff3c93d482c4276a44840331538
+          scan_type: SAST
+          scanner: SonarCloud
+          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+          scandog_url: ${{ vars.SCANDOG_URL }}
+          project_key: DevSecOpsOrg_govwa
+
+  scandog_mend_sca_2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install Mend CLI
+        run: |
+          curl -L -o mend-cli.zip https://downloads.mend.io/cli/linux_amd64/mend
+          chmod +x mend-cli.zip
+          sudo mv mend-cli.zip /usr/local/bin/mend
+      - name: Run Mend SCA Scan
+        run: |
+          mend auth info --non-interactive
+          mend dep -d . -r --format json >> mend-sca-report.json
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.1
+        with:
+          endpoint_type: "import"
+          ci_run_id: ${{ github.run_id }}
+          report_file: mend-sca-report.json
+          workflow_id: 622b4ff3c93d482c4276a44840331538
+          scan_type: SCA
+          scanner: mend
+          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+          scandog_url: ${{ vars.SCANDOG_URL }}
