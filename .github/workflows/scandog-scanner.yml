@@ -1,0 +1,33 @@
+name: ScanDog Security Scanner
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  scandog_gosec_sast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: -no-fail -fmt json -out gosec.json ${gosec_path}
+        env:
+          GO111MODULE: on
+      - name: Import results to ScanDog
+        uses: scandogio/scandog-import@v1.1
+        with:
+          endpoint_type: "import"
+          ci_run_id: ${{ github.run_id }}
+          report_file: gosec.json
+          workflow_id: ecae78a9247f505ec4fb46390eabfd7c
+          scan_type: SAST
+          scanner: Gosec
+          scandog_token: ${{ secrets.SCANDOG_TOKEN }}
+          scandog_url: ${{ vars.SCANDOG_URL }}
